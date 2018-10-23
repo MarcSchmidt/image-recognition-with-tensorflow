@@ -1,14 +1,14 @@
 # ---------- Imports ----------
 from time import time
 
-from keras.callbacks import TensorBoard
-from keras.layers import Conv2D
-from keras.layers import Dense
-from keras.layers import Dropout
-from keras.layers import Flatten
-from keras.layers import MaxPooling2D
-from keras.models import Sequential
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import Flatten
+from tensorflow.keras.layers import MaxPooling2D
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # ---------- Shape the CNN ----------
 # Initialising the CNN as sequential model
