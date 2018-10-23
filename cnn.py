@@ -4,15 +4,17 @@ from time import time
 from keras.callbacks import TensorBoard
 from keras.layers import Conv2D
 from keras.layers import Dense
+from keras.layers import Dropout
 from keras.layers import Flatten
 from keras.layers import MaxPooling2D
 from keras.models import Sequential
+from keras.preprocessing.image import ImageDataGenerator
 
 # ---------- Shape the CNN ----------
 # Initialising the CNN as sequential model
 classifier = Sequential()
 
-# Step 1        - Convolution Layer
+# Convolution Layer
 # Transform input in a feature map
 # Conv2D        - Two dimensional input (Image) with 4 Parameter
 # 32            - Amount of Filters to use
@@ -20,25 +22,32 @@ classifier = Sequential()
 # (64, 64, 3)   - Shape of Input (Rows, Columns, Channels)
 # 'relu'        - Activation function
 classifier.add(Conv2D(32, (3, 3), input_shape=(64, 64, 3), activation='relu'))
+classifier.add(Conv2D(32, (3, 3), activation='relu'))
 
-# Step 2 - Pooling Layer
+# Pooling Layer
 # Reduce the size of the input data by 75%
 # (2, 2) - Map 2x2 inputs to one output
 classifier.add(MaxPooling2D(pool_size=(2, 2)))
+# Dropout Layer
+# Remove randomly some nodes to add noise
+classifier.add(Dropout(0.25))
 
-# Second Convolution Layer
-classifier.add(Conv2D(32, (3, 3), activation='relu'))
+# Convolution Layer
+classifier.add(Conv2D(64, (3, 3), activation='relu'))
+classifier.add(Conv2D(64, (3, 3), activation='relu'))
 classifier.add(MaxPooling2D(pool_size=(2, 2)))
+classifier.add(Dropout(0.25))
 
-# Step 3 - Flattening Layer
+# Flattening Layer
 # Maps a X by X Matrix to one Vector
 classifier.add(Flatten())
 
-# Step 4 - Full connection Layer
+# Full connection Layer
 # units  - Amound of nodes in the hidden layer
-classifier.add(Dense(units=128, activation='relu'))
+classifier.add(Dense(units=512, activation='relu'))
+classifier.add(Dropout(0.5))
 
-# Step 5 - Output Layer
+# Output Layer
 # units  - Amount of output classes
 classifier.add(Dense(units=10, activation='sigmoid'))
 
@@ -46,7 +55,6 @@ classifier.add(Dense(units=10, activation='sigmoid'))
 classifier.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # ---------- Load Data ----------
-from keras.preprocessing.image import ImageDataGenerator
 
 # Generator to create batches of data from inputs
 # rescale           - Rescaling factors, it means that the RGB input with range 0-255 will be mapped to 0-1 values
@@ -55,7 +63,7 @@ from keras.preprocessing.image import ImageDataGenerator
 # zoom_range        - randomly zooming into the input
 # horizontal_flip   - randomly flip the input horizontally
 train_datagen = ImageDataGenerator(rescale=1. / 255,
-                                   rotation_range=40,
+                                   rotation_range=0,
                                    shear_range=0.2,
                                    zoom_range=0.2,
                                    horizontal_flip=True)
@@ -79,7 +87,9 @@ test_set = test_datagen.flow_from_directory('dataset/test_set',
 
 # ---------- Start Training ----------
 # Configure Tensorboard for Keras with defined log name
-tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
+tensorboard = TensorBoard(log_dir="logs/{}".format(time()),
+                          histogram_freq=0,
+                          write_graph=True, write_images=True)
 
 # Train the cnn with given training_set
 # steps_per_epoch   -  50.000 Images in total which are split in Batches of 32 Images makes 1562,5 Steps
@@ -88,7 +98,7 @@ tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 # callback          - gives information of training to the tensorboard
 classifier.fit_generator(training_set,
                          steps_per_epoch=1562,
-                         epochs=10,
+                         epochs=25,
                          validation_data=test_set,
                          validation_steps=312,
                          callbacks=[tensorboard])
