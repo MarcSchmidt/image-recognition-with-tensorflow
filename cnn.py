@@ -1,4 +1,6 @@
 # ---------- Imports ----------
+import os
+import json
 from time import time
 
 from tensorflow.keras.callbacks import TensorBoard
@@ -9,6 +11,12 @@ from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
+from tensorflow import estimator as tf_estimator
+from tensorflow.keras import estimator as k_estimator
+
+
+
 
 # ---------- Shape the CNN ----------
 # Initialising the CNN as sequential model
@@ -96,9 +104,32 @@ tensorboard = TensorBoard(log_dir="logs/{}".format(time()),
 # epochs            - One epoch equal training one time on the whole dataset (or all steps)
 # validation_steps  - 10.000 Images total which are split in Batches of 32 Images makes 312 Steps
 # callback          - gives information of training to the tensorboard
-classifier.fit_generator(training_set,
-                         steps_per_epoch=1562,
-                         epochs=25,
-                         validation_data=test_set,
-                         validation_steps=312,
-                         callbacks=[tensorboard])
+# classifier.fit_generator(training_set,
+#                          steps_per_epoch=1562,
+#                          epochs=25,
+#                          validation_data=test_set,
+#                          validation_steps=312,
+#                          callbacks=[tensorboard])
+
+
+def model_main():
+    distribution = CollectiveAllReduceStrategy(num_gpus_per_worker=1)
+    run_config = tf_estimator.RunConfig(train_distribute=distribution, eval_distribute=distribution)
+    keras_estimator = k_estimator.model_to_estimator(
+        keras_model=classifier, config=run_config, model_dir='/tmp')
+    train_spec = tf_estimator.TrainSpec(input_fn=training_set)
+    eval_spec = tf_estimator.EvalSpec(input_fn=test_set)
+    tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
+
+
+os.environ["TF_CONFIG"] = json.dumps({
+
+    "cluster": {
+        "chief": ["127.0.0.1:2222"],
+        "worker": []
+    },
+    "task": {"type": "chief", "index": 0}
+})
+
+# Call the model_main function defined above.
+model_main()
