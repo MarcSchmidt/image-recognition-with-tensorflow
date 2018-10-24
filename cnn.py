@@ -1,8 +1,11 @@
 # ---------- Imports ----------
-import os
 import json
+import os
 from time import time
 
+from tensorflow import estimator as tf_estimator
+from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
+from tensorflow.keras import estimator as k_estimator
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import Dense
@@ -11,12 +14,6 @@ from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
-from tensorflow import estimator as tf_estimator
-from tensorflow.keras import estimator as k_estimator
-
-
-
 
 # ---------- Shape the CNN ----------
 # Initialising the CNN as sequential model
@@ -99,6 +96,7 @@ tensorboard = TensorBoard(log_dir="logs/{}".format(time()),
                           histogram_freq=0,
                           write_graph=True, write_images=True)
 
+
 # Train the cnn with given training_set
 # steps_per_epoch   -  50.000 Images in total which are split in Batches of 32 Images makes 1562,5 Steps
 # epochs            - One epoch equal training one time on the whole dataset (or all steps)
@@ -111,14 +109,21 @@ tensorboard = TensorBoard(log_dir="logs/{}".format(time()),
 #                          validation_steps=312,
 #                          callbacks=[tensorboard])
 
+def training_input_fn():
+    return training_set
+
+
+def test_input_fn():
+    return test_set
+
 
 def model_main():
     distribution = CollectiveAllReduceStrategy(num_gpus_per_worker=1)
     run_config = tf_estimator.RunConfig(train_distribute=distribution, eval_distribute=distribution)
     keras_estimator = k_estimator.model_to_estimator(
-        keras_model=classifier, config=run_config, model_dir='/tmp')
-    train_spec = tf_estimator.TrainSpec(input_fn=training_set)
-    eval_spec = tf_estimator.EvalSpec(input_fn=test_set)
+        keras_model=classifier, config=run_config, model_dir='./model')
+    train_spec = tf_estimator.TrainSpec(input_fn=training_input_fn)
+    eval_spec = tf_estimator.EvalSpec(input_fn=test_input_fn)
     tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
 
 
