@@ -132,15 +132,5 @@ def model_main():
     eval_spec = tf_estimator.EvalSpec(input_fn=test_input_fn)
     tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
 
-
-os.environ["TF_CONFIG"] = json.dumps({
-
-    "cluster": {
-        "chief": ["127.0.0.1:2222"],
-        "worker": []
-    },
-    "task": {"type": "chief", "index": 0}
-})
-
 # Call the model_main function defined above.
 model_main()
