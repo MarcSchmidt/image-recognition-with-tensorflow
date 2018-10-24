@@ -111,6 +111,8 @@ tensorboard = TensorBoard(log_dir="logs/{}".format(time()),
 # epochs            - One epoch equal training one time on the whole dataset (or all steps)
 # validation_steps  - 10.000 Images total which are split in Batches of 32 Images makes 312 Steps
 # callback          - gives information of training to the tensorboard
+# training_set = training_input_fn()
+# test_set = test_input_fn()
 # classifier.fit_generator(training_set,
 #                          steps_per_epoch=1562,
 #                          epochs=25,
