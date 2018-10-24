@@ -61,34 +61,43 @@ classifier.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['
 
 # ---------- Load Data ----------
 
-# Generator to create batches of data from inputs
-# rescale           - Rescaling factors, it means that the RGB input with range 0-255 will be mapped to 0-1 values
-# rotation_range    - randomly rotate input by a degree
-# shear_range       - randomly apply shearing transformation
-# zoom_range        - randomly zooming into the input
-# horizontal_flip   - randomly flip the input horizontally
-train_datagen = ImageDataGenerator(rescale=1. / 255,
-                                   rotation_range=0,
-                                   shear_range=0.2,
-                                   zoom_range=0.2,
-                                   horizontal_flip=True)
-# Generate test data
-test_datagen = ImageDataGenerator(rescale=1. / 255)
 
-# Load the training data from directory, where each subdirectory is one class
-# target_size   - resize images to the given size
-# batch_size    - Amount of Images to load for one Step in training (should fit into system memory)
-# class_mode    - Set classes to 2D one-hot encoded labels
-training_set = train_datagen.flow_from_directory('dataset/training_set',
-                                                 target_size=(64, 64),
-                                                 batch_size=32,
-                                                 class_mode='categorical')
+def training_input_fn():
+    # Generator to create batches of data from inputs
+    # rescale           - Rescaling factors, it means that the RGB input with range 0-255 will be mapped to 0-1 values
+    # rotation_range    - randomly rotate input by a degree
+    # shear_range       - randomly apply shearing transformation
+    # zoom_range        - randomly zooming into the input
+    # horizontal_flip   - randomly flip the input horizontally
+    train_datagen = ImageDataGenerator(rescale=1. / 255,
+                                       rotation_range=0,
+                                       shear_range=0.2,
+                                       zoom_range=0.2,
+                                       horizontal_flip=True)
+    # Load the training data from directory, where each subdirectory is one class
+    # target_size   - resize images to the given size
+    # batch_size    - Amount of Images to load for one Step in training (should fit into system memory)
+    # class_mode    - Set classes to 2D one-hot encoded labels
+    training_set = train_datagen.flow_from_directory('dataset/training_set',
+                                                     target_size=(64, 64),
+                                                     batch_size=32,
+                                                     class_mode='categorical')
+    return training_set
 
-# Load the test data from directory, where each subdirectory is one class
-test_set = test_datagen.flow_from_directory('dataset/test_set',
-                                            target_size=(64, 64),
-                                            batch_size=32,
-                                            class_mode='categorical')
+
+def test_input_fn():
+    # Generate test data
+    test_datagen = ImageDataGenerator(rescale=1. / 255)
+
+    # Load the test data from directory, where each subdirectory is one class
+    test_set = test_datagen.flow_from_directory('dataset/test_set',
+                                                target_size=(64, 64),
+                                                batch_size=32,
+                                                class_mode='categorical')
+    return test_set
+
+
+
 
 # ---------- Start Training ----------
 # Configure Tensorboard for Keras with defined log name
@@ -109,12 +118,6 @@ tensorboard = TensorBoard(log_dir="logs/{}".format(time()),
 #                          validation_steps=312,
 #                          callbacks=[tensorboard])
 
-def training_input_fn():
-    return training_set
-
-
-def test_input_fn():
-    return test_set
 
 
 def model_main():
