@@ -59,6 +59,7 @@ classifier.add(Dense(units=10, activation='sigmoid'))
 # Compiling the CNN
 classifier.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
+classifier.summary()
 # ---------- Load Data ----------
 
 # Generator to create batches of data from inputs
