@@ -31,6 +31,15 @@ classifier.add(ks.layers.Conv2D(32, (3, 3), activation='relu'))
 # Reduce the size of the input data by 75%
 # (2, 2) - Map 2x2 inputs to one output
 classifier.add(ks.layers.MaxPooling2D(pool_size=(2, 2)))
+# Dropout Layer
+# Remove randomly some nodes to add noise
+classifier.add(ks.layers.Dropout(0.25))
+
+# Convolution Layer
+classifier.add(ks.layers.Conv2D(64, (3, 3), activation='relu'))
+classifier.add(ks.layers.Conv2D(64, (3, 3), activation='relu'))
+classifier.add(ks.layers.MaxPooling2D(pool_size=(2, 2)))
+classifier.add(ks.layers.Dropout(0.25))
 
 # Flattening Layer
 # Maps a X by X Matrix to one Vector
@@ -51,66 +60,7 @@ classifier.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics
 
 classifier.summary()
 
-
-# ---------- Load Data ----------
-
-
-def training_input_fn():
-    # Generator to create batches of data from inputs
-    # rescale           - Rescaling factors, it means that the RGB input with range 0-255 will be mapped to 0-1 values
-    # rotation_range    - randomly rotate input by a degree
-    # shear_range       - randomly apply shearing transformation
-    # zoom_range        - randomly zooming into the input
-    # horizontal_flip   - randomly flip the input horizontally
-    train_datagen = ks.preprocessing.image.ImageDataGenerator(rescale=1. / 255,
-                                                              rotation_range=0,
-                                                              shear_range=0.2,
-                                                              zoom_range=0.2,
-                                                              horizontal_flip=True)
-    # Load the training data from directory, where each subdirectory is one class
-    # target_size   - resize images to the given size
-    # batch_size    - Amount of Images to load for one Step in training (should fit into system memory)
-    # class_mode    - Set classes to 2D one-hot encoded labels
-    training_set = train_datagen.flow_from_directory('dataset/training_set',
-                                                     target_size=(64, 64),
-                                                     batch_size=32,
-                                                     class_mode='categorical')
-
-    return tf.data.Dataset.from_generator(training_set, output_types=(tf.int64, tf.int64))
-
-
-def test_input_fn():
-    # Generate test data
-    test_datagen = ks.preprocessing.image.ImageDataGenerator(rescale=1. / 255)
-
-    # Load the test data from directory, where each subdirectory is one class
-    test_set = test_datagen.flow_from_directory('dataset/test_set',
-                                                target_size=(64, 64),
-                                                batch_size=32,
-                                                class_mode='categorical')
-    return tf.data.Dataset.from_generator(test_set, output_types=(tf.int64, tf.int64))
-
-
 # ---------- Start Training ----------
-# Configure Tensorboard for Keras with defined log name
-tensorboard = ks.callbacks.TensorBoard(log_dir="logs/{}".format(time()),
-                                       histogram_freq=0,
-                                       write_graph=True, write_images=True)
-
-# Train the cnn with given training_set
-# steps_per_epoch   -  50.000 Images in total which are split in Batches of 32 Images makes 1562,5 Steps
-# epochs            - One epoch equal training one time on the whole dataset (or all steps)
-# validation_steps  - 10.000 Images total which are split in Batches of 32 Images makes 312 Steps
-# callback          - gives information of training to the tensorboard
-# training_set = training_input_fn()
-# test_set = test_input_fn()
-# classifier.fit_generator(training_set,
-#                          steps_per_epoch=1562,
-#                          epochs=25,
-#                          validation_data=test_set,
-#                          validation_steps=312,
-#                          callbacks=[tensorboard])
-
 
 # Convert class vectors to binary class matrices.
 y_train = ks.utils.to_categorical(train_label, 10)
@@ -127,7 +77,9 @@ def input_training():
     # x = tf.cast(input_train_data_img, tf.float32)
     # training_set = tf.data.Dataset.from_tensor_slices((x, input_train_data_label))
     training_set = tf.data.Dataset.from_tensor_slices((train_img, y_train))
-    training_set = training_set.take(100).batch(32)
+    training_set = training_set.shuffle(buffer_size=100)
+    training_set = training_set.batch(32)
+    training_set = training_set.repeat(1)
     print(train_img.shape)
     print(training_set.output_shapes)
     return training_set
@@ -138,7 +90,9 @@ def input_validation():
     # x = tf.cast(input_eval_data_img, tf.float32)
     # validation_set = tf.data.Dataset.from_tensor_slices((x, input_eval_data_label))
     validation_set = tf.data.Dataset.from_tensor_slices((test_img, y_test))
-    validation_set = validation_set.take(100).batch(32)
+    validation_set = validation_set.shuffle(buffer_size=100)
+    validation_set = validation_set.batch(32)
+    validation_set = validation_set.repeat(1)
     print(test_img.shape)
     print(validation_set.output_shapes)
     return validation_set
