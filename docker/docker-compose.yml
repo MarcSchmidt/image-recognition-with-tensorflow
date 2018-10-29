@@ -1,11 +1,16 @@
-version: '3'
+version: '2.2'
 
 services:
   chief:
     image: tensorflow-img-rec
+    mem_limit: 4g
+    cpu_count: 2
     environment:
       TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker:2222"]},"task": {"type": "chief", "index": 0}}'
+
   worker:
     image: tensorflow-img-rec
+    mem_limit: 4g
+    cpu_count: 2
     environment:
       TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker:2222"]},"task": {"type": "worker", "index": 0}}'
