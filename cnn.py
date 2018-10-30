@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import estimator as tf_estimator
 from tensorflow import keras as ks
-from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
+from tensorflow.contrib.distribute import ParameterServerStrategy
 from tensorflow.python.platform import tf_logging as logging
 
 
@@ -101,7 +101,7 @@ def input_fn(img=None,
 
 def model_main():
     logging.info("--------------------- Set RunConfiguration ---------------------")
-    distribution = CollectiveAllReduceStrategy(num_gpus_per_worker=1)
+    distribution = ParameterServerStrategy(num_gpus_per_worker=1)
     run_config = tf_estimator.RunConfig(train_distribute=distribution, eval_distribute=distribution)
 
     # Create estimator
