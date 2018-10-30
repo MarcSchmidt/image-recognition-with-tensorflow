@@ -4,6 +4,8 @@ services:
   chief:
     image: tensorflow-img-rec
     cpu_count: 1
+    ports:
+    - 6006:6006
     environment:
       TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker:2222"]},"task": {"type": "chief", "index": 0}}'
 

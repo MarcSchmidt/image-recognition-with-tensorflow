@@ -1,11 +1,14 @@
 # ---------- Imports ----------
+import os
+
 import numpy as np
 import tensorflow as tf
 from tensorflow import estimator as tf_estimator
 from tensorflow import keras as ks
 from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
+from tensorflow.python.platform import tf_logging as logging
 
-print("--------------------- Load Data ---------------------")
+logging.info("--------------------- Load Data ---------------------")
 (train_img, train_label), (test_img, test_label) = tf.keras.datasets.cifar10.load_data()
 
 # Reduce data to 10% to not exceed the given memory
@@ -94,12 +97,12 @@ def input_validation():
 
 
 def model_main():
-    print("--------------------- Set RunConfiguration ---------------------")
+    logging.info("--------------------- Set RunConfiguration ---------------------")
     distribution = CollectiveAllReduceStrategy(num_gpus_per_worker=1)
     run_config = tf_estimator.RunConfig(train_distribute=distribution, eval_distribute=distribution)
 
     # Create estimator
-    print("--------------------- Create Estimator ---------------------")
+    logging.info("--------------------- Create Estimator ---------------------")
     keras_estimator = ks.estimator.model_to_estimator(
         keras_model=classifier, config=run_config, model_dir='./model')
 
@@ -107,17 +110,20 @@ def model_main():
     eval_spec = tf_estimator.EvalSpec(input_fn=input_validation)
 
     # Create estimator
-    print("--------------------- Start Training ---------------------")
+    logging.info("--------------------- Start Training ---------------------")
     tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
 
 
 # Define the evironment variable, for local usage
-# import os
-
 # os.environ[
 #    "TF_CONFIG"] = '{"cluster": {"chief": ["localhost:2223"],"worker": ["localhost:2222"]},"task": {"type": "chief", "index": 0}}'
 
 # Call the model_main function defined above.
 #
 model_main()
-print("--------------------- Finish training ---------------------")
+logging.info("--------------------- Finish training ---------------------")
+
+if "TF_CONFIG" in os.environ:
+    config = os.environ['TF_CONFIG']
+    if "\"type\": \"chief\"" in config:
+        os.system('tensorboard --logdir=/notebooks/app/model')
