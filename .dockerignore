@@ -1,0 +1,12 @@
+#Ignore following:
+dataset/
+logs/
+docker/
+model/
+.md
+.txt
+
+#Do not ignore:
+!dataset/cifar-10-batches-py.tar.gz
+
+

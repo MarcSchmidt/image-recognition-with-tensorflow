@@ -1,17 +1,18 @@
 # ---------- Imports ----------
-import json
-import os
-from time import time
-
+import numpy as np
+import tensorflow as tf
 from tensorflow import estimator as tf_estimator
+from tensorflow import keras as ks
 from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
 
-import tensorflow as tf
-
-from tensorflow import keras as ks
-import numpy as np
-
+print("--------------------- Load Data ---------------------")
 (train_img, train_label), (test_img, test_label) = tf.keras.datasets.cifar10.load_data()
+
+# Reduce data to 10% to not exceed the given memory
+train_img = np.array_split(train_img, 10)[0]
+train_label = np.array_split(train_label, 10)[0]
+test_img = np.array_split(test_img, 10)[0]
+test_label = np.array_split(test_label, 10)[0]
 
 # ---------- Shape the CNN ----------
 # Initialising the CNN as sequential model
@@ -24,7 +25,7 @@ classifier = ks.models.Sequential()
 # (3, 3)        - shape of each Filter
 # (64, 64, 3)   - Shape of Input (Rows, Columns, Channels)
 # 'relu'        - Activation function
-classifier.add(ks.layers.Conv2D(32, (3, 3), input_shape=(32, 32, 3), activation='relu', data_format='channels_last') )
+classifier.add(ks.layers.Conv2D(32, (3, 3), input_shape=(32, 32, 3), activation='relu', data_format='channels_last'))
 classifier.add(ks.layers.Conv2D(32, (3, 3), activation='relu'))
 
 # Pooling Layer
@@ -69,48 +70,54 @@ y_test = ks.utils.to_categorical(test_label, 10)
 train_img = train_img.astype('float32')
 test_img = test_img.astype('float32')
 
+# Map RGB values from 0-255 to 0-1
 train_img /= 255
 test_img /= 255
 
 
 def input_training():
-    # x = tf.cast(input_train_data_img, tf.float32)
-    # training_set = tf.data.Dataset.from_tensor_slices((x, input_train_data_label))
     training_set = tf.data.Dataset.from_tensor_slices((train_img, y_train))
-    training_set = training_set.shuffle(buffer_size=100)
     training_set = training_set.batch(32)
-    training_set = training_set.repeat(1)
+    training_set = training_set.repeat()
     print(train_img.shape)
     print(training_set.output_shapes)
     return training_set
 
 
 def input_validation():
-    # input_eval_data_img, input_eval_data_label = input_train_data_img, input_train_data_label
-    # x = tf.cast(input_eval_data_img, tf.float32)
-    # validation_set = tf.data.Dataset.from_tensor_slices((x, input_eval_data_label))
     validation_set = tf.data.Dataset.from_tensor_slices((test_img, y_test))
-    validation_set = validation_set.shuffle(buffer_size=100)
     validation_set = validation_set.batch(32)
-    validation_set = validation_set.repeat(1)
+    validation_set = validation_set.repeat()
     print(test_img.shape)
     print(validation_set.output_shapes)
     return validation_set
 
 
 def model_main():
+    print("--------------------- Set RunConfiguration ---------------------")
     distribution = CollectiveAllReduceStrategy(num_gpus_per_worker=1)
     run_config = tf_estimator.RunConfig(train_distribute=distribution, eval_distribute=distribution)
 
     # Create estimator
+    print("--------------------- Create Estimator ---------------------")
     keras_estimator = ks.estimator.model_to_estimator(
         keras_model=classifier, config=run_config, model_dir='./model')
 
-    train_spec = tf_estimator.TrainSpec(input_fn=input_training)
+    train_spec = tf_estimator.TrainSpec(input_fn=input_training, max_steps=1000)
     eval_spec = tf_estimator.EvalSpec(input_fn=input_validation)
+
+    # Create estimator
+    print("--------------------- Start Training ---------------------")
     tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
 
 
+# Define the evironment variable, for local usage
+# import os
+
+# os.environ[
+#    "TF_CONFIG"] = '{"cluster": {"chief": ["localhost:2223"],"worker": ["localhost:2222"]},"task": {"type": "chief", "index": 0}}'
+
 # Call the model_main function defined above.
-os.environ["TF_CONFIG"] = '{"cluster": {"chief": ["localhost:2223"],"worker": ["localhost:2222"]},"task": {"type": "chief", "index": 0}}'
+#
 model_main()
+print("--------------------- Finish training ---------------------")
