@@ -8,6 +8,59 @@ from tensorflow import keras as ks
 from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
 from tensorflow.python.platform import tf_logging as logging
 
+
+def create_model():
+    # ---------- Shape the CNN ----------
+    # Initialising the CNN as sequential model
+    classifier = ks.models.Sequential()
+
+    # Convolution Layer
+    # Transform input in a feature map
+    # Conv2D        - Two dimensional input (Image) with 4 Parameter
+    # 32            - Amount of Filters to use
+    # (3, 3)        - shape of each Filter
+    # (64, 64, 3)   - Shape of Input (Rows, Columns, Channels)
+    # 'relu'        - Activation function
+    classifier.add(
+        ks.layers.Conv2D(32, (3, 3), input_shape=(32, 32, 3), activation='relu', data_format='channels_last'))
+    classifier.add(ks.layers.Conv2D(32, (3, 3), activation='relu'))
+
+    # Pooling Layer
+    # Reduce the size of the input data by 75%
+    # (2, 2) - Map 2x2 inputs to one output
+    classifier.add(ks.layers.MaxPooling2D(pool_size=(2, 2)))
+    # Dropout Layer
+    # Remove randomly some nodes to add noise
+    classifier.add(ks.layers.Dropout(0.25))
+
+    # Convolution Layer
+    classifier.add(ks.layers.Conv2D(64, (3, 3), activation='relu'))
+    classifier.add(ks.layers.Conv2D(64, (3, 3), activation='relu'))
+    classifier.add(ks.layers.MaxPooling2D(pool_size=(2, 2)))
+    classifier.add(ks.layers.Dropout(0.25))
+
+    # Flattening Layer
+    # Maps a X by X Matrix to one Vector
+    classifier.add(ks.layers.Flatten())
+
+    # Full connection Layer
+    # units  - Amound of nodes in the hidden layer
+    classifier.add(ks.layers.Dense(units=512, activation='relu'))
+    classifier.add(ks.layers.Dropout(0.5))
+
+    # Output Layer
+    # units  - Amount of output classes
+    classifier.add(ks.layers.Dense(units=10, activation='sigmoid'))
+
+    # Compiling the CNN
+    optimizer = tf.train.AdamOptimizer()
+    classifier.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+
+    classifier.summary()
+
+    return classifier
+
+
 logging.info("--------------------- Load Data ---------------------")
 (train_img, train_label), (test_img, test_label) = tf.keras.datasets.cifar10.load_data()
 
@@ -16,55 +69,6 @@ train_img = np.array_split(train_img, 10)[0]
 train_label = np.array_split(train_label, 10)[0]
 test_img = np.array_split(test_img, 10)[0]
 test_label = np.array_split(test_label, 10)[0]
-
-# ---------- Shape the CNN ----------
-# Initialising the CNN as sequential model
-classifier = ks.models.Sequential()
-
-# Convolution Layer
-# Transform input in a feature map
-# Conv2D        - Two dimensional input (Image) with 4 Parameter
-# 32            - Amount of Filters to use
-# (3, 3)        - shape of each Filter
-# (64, 64, 3)   - Shape of Input (Rows, Columns, Channels)
-# 'relu'        - Activation function
-classifier.add(ks.layers.Conv2D(32, (3, 3), input_shape=(32, 32, 3), activation='relu', data_format='channels_last'))
-classifier.add(ks.layers.Conv2D(32, (3, 3), activation='relu'))
-
-# Pooling Layer
-# Reduce the size of the input data by 75%
-# (2, 2) - Map 2x2 inputs to one output
-classifier.add(ks.layers.MaxPooling2D(pool_size=(2, 2)))
-# Dropout Layer
-# Remove randomly some nodes to add noise
-classifier.add(ks.layers.Dropout(0.25))
-
-# Convolution Layer
-classifier.add(ks.layers.Conv2D(64, (3, 3), activation='relu'))
-classifier.add(ks.layers.Conv2D(64, (3, 3), activation='relu'))
-classifier.add(ks.layers.MaxPooling2D(pool_size=(2, 2)))
-classifier.add(ks.layers.Dropout(0.25))
-
-# Flattening Layer
-# Maps a X by X Matrix to one Vector
-classifier.add(ks.layers.Flatten())
-
-# Full connection Layer
-# units  - Amound of nodes in the hidden layer
-classifier.add(ks.layers.Dense(units=512, activation='relu'))
-classifier.add(ks.layers.Dropout(0.5))
-
-# Output Layer
-# units  - Amount of output classes
-classifier.add(ks.layers.Dense(units=10, activation='sigmoid'))
-
-# Compiling the CNN
-optimizer = tf.train.AdamOptimizer()
-classifier.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
-
-classifier.summary()
-
-# ---------- Start Training ----------
 
 # Convert class vectors to binary class matrices.
 y_train = ks.utils.to_categorical(train_label, 10)
@@ -78,22 +82,21 @@ train_img /= 255
 test_img /= 255
 
 
-def input_training():
-    training_set = tf.data.Dataset.from_tensor_slices((train_img, y_train))
-    training_set = training_set.batch(32)
-    training_set = training_set.repeat()
-    print(train_img.shape)
-    print(training_set.output_shapes)
-    return training_set
+# ---------- Input function ----------
+def input_fn(img=None,
+             label=None,
+             batch_size=32,
+             num_epochs=None,
+             buffer_factor=10,
+             shuffle=True):
+    data_set = tf.data.Dataset.from_tensor_slices((img, label))
 
+    if shuffle:
+        data_set = data_set.shuffle(buffer_size=batch_size * buffer_factor)
 
-def input_validation():
-    validation_set = tf.data.Dataset.from_tensor_slices((test_img, y_test))
-    validation_set = validation_set.batch(32)
-    validation_set = validation_set.repeat()
-    print(test_img.shape)
-    print(validation_set.output_shapes)
-    return validation_set
+    data_set = data_set.repeat(num_epochs)
+    data_set = data_set.batch(batch_size=batch_size)
+    return data_set
 
 
 def model_main():
@@ -104,10 +107,12 @@ def model_main():
     # Create estimator
     logging.info("--------------------- Create Estimator ---------------------")
     keras_estimator = ks.estimator.model_to_estimator(
-        keras_model=classifier, config=run_config, model_dir='./model')
+        keras_model=create_model(), config=run_config, model_dir='./model')
 
-    train_spec = tf_estimator.TrainSpec(input_fn=input_training, max_steps=1000)
-    eval_spec = tf_estimator.EvalSpec(input_fn=input_validation)
+    train_spec = tf_estimator.TrainSpec(input_fn=lambda: input_fn(img=train_img, label=y_train, shuffle=True),
+                                        max_steps=1000)
+    eval_spec = tf_estimator.EvalSpec(input_fn=lambda: input_fn(img=test_img, label=y_test, shuffle=False),
+                                      steps=100)
 
     # Create estimator
     logging.info("--------------------- Start Training ---------------------")
