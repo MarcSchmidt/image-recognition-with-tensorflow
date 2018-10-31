@@ -7,22 +7,16 @@ services:
     ports:
     - 6006:6006
     environment:
-      TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker_1:2222","worker_2:2222"], "ps": ["ps_1:2222"]},"task": {"type": "chief", "index": 0}}'
+      TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker_1:2222","worker_2:2222"]},"task": {"type": "chief", "index": 0}}'
 
   worker_1:
     image: tensorflow-img-rec
-    cpus: 0.75
+    cpus: 1
     environment:
-      TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker_1:2222","worker_2:2222"], "ps": ["ps_1:2222"]},"task": {"type": "worker", "index": 0}}'
+      TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker_1:2222","worker_2:2222"]},"task": {"type": "worker", "index": 0}}'
 
   worker_2:
     image: tensorflow-img-rec
-    cpus: 0.75
+    cpus: 1
     environment:
-      TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker_1:2222","worker_2:2222"], "ps": ["ps_1:2222"]},"task": {"type": "worker", "index": 1}}'
-
-  ps_1:
-    image: tensorflow-img-rec
-    cpus: 0.5
-    environment:
-      TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker_1:2222","worker_2:2222"], "ps": ["ps_1:2222"]},"task": {"type": "ps", "index": 0}}'
+      TF_CONFIG: '{"cluster": {"chief": ["chief:2222"],"worker": ["worker_1:2222","worker_2:2222"]},"task": {"type": "worker", "index": 1}}'
