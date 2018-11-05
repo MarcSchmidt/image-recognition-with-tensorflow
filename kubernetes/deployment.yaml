@@ -1,8 +1,44 @@
+# Namespace for the App
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tensorflow
+---
+# NodePort Service to export the tensorboard from chiefnode
+apiVersion: v1
+kind: Service
+metadata:
+  name: chief-tensorboard
+  namespace: tensorflow
+spec:
+  selector:
+    app: chief
+  type: NodePort
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+---
+# Chief Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: chief-svc
+  namespace: tensorflow
+spec:
+  selector:
+    app: chief
+  ports:
+    - port: 2222
+      protocol: TCP
+      targetPort: 2222
+---
 # Deployment Chief
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tensorflow-img-rec-chief
+  name: tensorflow-chief
+  namespace: tensorflow
 spec:
   selector:
     matchLabels:
@@ -16,19 +52,41 @@ spec:
       containers:
         - name: chief
           image: tensorflow-img-rec
+          imagePullPolicy: Never
+          env:
+            - name: CLUSTER_TASK
+              value:  'chief'
           ports:
             - containerPort: 2222
 ---
+# Worker Service
+apiVersion:  v1
+kind: Service
+metadata:
+  name: worker-svc
+  namespace: tensorflow
+spec:
+  clusterIP: None # <-- headless
+  selector:
+    app: worker
+  ports:
+    - port: 2222
+      protocol: TCP
+      targetPort: 2222
+---
 # Deployment Worker
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: tensorflow-img-rec-worker
+  name: tensorflow-worker
+  namespace: tensorflow
 spec:
   selector:
     matchLabels:
       app: worker
   replicas: 2
+  serviceName: "worker-svc"
+  podManagementPolicy: "Parallel"
   template:
     metadata:
       labels:
@@ -37,45 +95,9 @@ spec:
       containers:
         - name: worker
           image: tensorflow-img-rec
+          imagePullPolicy: Never
+          env:
+            - name: CLUSTER_TASK
+              value: 'worker'
           ports:
             - containerPort: 2222
----
-# Chief Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: chief-svc
-spec:
-  selector:
-    app: chief
-  ports:
-    - port: 2222
-      protocol: TCP
-      targetPort: 2222
----
-# Worker Service
-apiVersion:  v1
-kind: Service
-metadata:
-  name: worker-svc
-spec:
-  selector:
-    app: worker
-  ports:
-    - port: 2222
-      protocol: TCP
-      targetPort: 2222
----
-# NodePort Service to export the tensorboard from chiefnode
-apiVersion: v1
-kind: Service
-metadata:
-  name: chief-tensorboard
-spec:
-  selector:
-    app: chief
-  type: NodePort
-  ports:
-    - port: 8080
-      protocol: TCP
-      targetPort: 8080
