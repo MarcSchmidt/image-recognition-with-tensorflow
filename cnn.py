@@ -1,13 +1,15 @@
 # ---------- Imports ----------
 import os
 
+import numpy as np
 import tensorflow as tf
 from tensorflow import estimator as tf_estimator
 from tensorflow import keras as ks
 from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
 
 
-def create_model():
+def create_model(input_shape=(32, 32, 3), starting_filter_size=32, filter_shape=(3, 3), activation_fn='relu',
+                 pooling_shape=(2, 2), output_classes=10):
     # ---------- Shape the CNN ----------
     # Initialising the CNN as sequential model
     classifier = ks.models.Sequential()
@@ -20,21 +22,22 @@ def create_model():
     # (64, 64, 3)   - Shape of Input (Rows, Columns, Channels)
     # 'relu'        - Activation function
     classifier.add(
-        ks.layers.Conv2D(32, (3, 3), input_shape=(32, 32, 3), activation='relu', data_format='channels_last'))
-    classifier.add(ks.layers.Conv2D(32, (3, 3), activation='relu'))
+        ks.layers.Conv2D(starting_filter_size, filter_shape, input_shape=input_shape, activation=activation_fn,
+                         data_format='channels_last'))
+    classifier.add(ks.layers.Conv2D(starting_filter_size, filter_shape, activation=activation_fn))
 
     # Pooling Layer
     # Reduce the size of the input data by 75%
     # (2, 2) - Map 2x2 inputs to one output
-    classifier.add(ks.layers.MaxPooling2D(pool_size=(2, 2)))
+    classifier.add(ks.layers.MaxPooling2D(pool_size=pooling_shape))
     # Dropout Layer
     # Remove randomly some nodes to add noise
     classifier.add(ks.layers.Dropout(0.25))
 
     # Convolution Layer
-    classifier.add(ks.layers.Conv2D(64, (3, 3), activation='relu'))
-    classifier.add(ks.layers.Conv2D(64, (3, 3), activation='relu'))
-    classifier.add(ks.layers.MaxPooling2D(pool_size=(2, 2)))
+    classifier.add(ks.layers.Conv2D(starting_filter_size * 2, filter_shape, activation=activation_fn))
+    classifier.add(ks.layers.Conv2D(starting_filter_size * 2, filter_shape, activation=activation_fn))
+    classifier.add(ks.layers.MaxPooling2D(pool_size=pooling_shape))
     classifier.add(ks.layers.Dropout(0.25))
 
     # Flattening Layer
@@ -43,12 +46,12 @@ def create_model():
 
     # Full connection Layer
     # units  - Amound of nodes in the hidden layer
-    classifier.add(ks.layers.Dense(units=512, activation='relu'))
+    classifier.add(ks.layers.Dense(units=512, activation=activation_fn))
     classifier.add(ks.layers.Dropout(0.5))
 
     # Output Layer
     # units  - Amount of output classes
-    classifier.add(ks.layers.Dense(units=10, activation='sigmoid'))
+    classifier.add(ks.layers.Dense(units=output_classes, activation='sigmoid'))
 
     # Compiling the CNN
     optimizer = tf.train.AdamOptimizer()
@@ -64,12 +67,12 @@ def input_fn(img=None,
              label=None,
              batch_size=32,
              num_epochs=None,
-             buffer_factor=10,
+             num_worker=3,
              shuffle=True):
     data_set = tf.data.Dataset.from_tensor_slices((img, label))
 
     if shuffle:
-        data_set = data_set.shuffle(buffer_size=batch_size * buffer_factor)
+        data_set = data_set.shuffle(buffer_size=batch_size * num_worker)
 
     data_set = data_set.repeat(num_epochs)
     data_set = data_set.batch(batch_size=batch_size)
