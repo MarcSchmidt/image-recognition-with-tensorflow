@@ -1,6 +1,6 @@
 # ---------- Imports ----------
 import os
-
+import numpy as np
 import tensorflow as tf
 from tensorflow import estimator as tf_estimator
 from tensorflow import keras as ks
@@ -120,7 +120,7 @@ def model_main():
     if "TF_CONFIG" in os.environ:
         config = os.environ['TF_CONFIG']
         if "\"type\": \"chief\"" in config:
-            os.system('tensorboard --logdir=/notebooks/app/model')
+            os.system('tensorboard --logdir=/notebooks/app/model --port=8080')
 
 
 # Define the evironment variable, for local usage

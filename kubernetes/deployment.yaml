@@ -1,0 +1,81 @@
+# Deployment Chief
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tensorflow-img-rec-chief
+spec:
+  selector:
+    matchLabels:
+      app: chief
+  replicas: 1
+  template:
+    metadata:
+        labels:
+          app: chief
+    spec:
+      containers:
+        - name: chief
+          image: tensorflow-img-rec
+          ports:
+            - containerPort: 2222
+---
+# Deployment Worker
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tensorflow-img-rec-worker
+spec:
+  selector:
+    matchLabels:
+      app: worker
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: tensorflow-img-rec
+          ports:
+            - containerPort: 2222
+---
+# Chief Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: chief-svc
+spec:
+  selector:
+    app: chief
+  ports:
+    - port: 2222
+      protocol: TCP
+      targetPort: 2222
+---
+# Worker Service
+apiVersion:  v1
+kind: Service
+metadata:
+  name: worker-svc
+spec:
+  selector:
+    app: worker
+  ports:
+    - port: 2222
+      protocol: TCP
+      targetPort: 2222
+---
+# NodePort Service to export the tensorboard from chiefnode
+apiVersion: v1
+kind: Service
+metadata:
+  name: chief-tensorboard
+spec:
+  selector:
+    app: chief
+  type: NodePort
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
