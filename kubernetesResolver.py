@@ -1,5 +1,7 @@
 from kubernetes import client, config
 import re
+import os
+import json
 
 # only works in the cluster itself not from outside or remote.
 config.load_incluster_config()
@@ -25,14 +27,35 @@ def print_pods_services():
 
 
 def build_config():
+    task = {'type': os.environ.get("POD_TASK"), 'index': int(build_task_index())}
+    cluster = {'chief': build_chief_config(), 'worker': build_worker_config()}
+    tf_config = {'cluster': cluster, 'task': task}
+    print(tf_config)
+    return json.dumps(tf_config)
+
+
+def build_worker_config(namespace="tensorflow"):
     worker_nodes = []
-    pods = k8.list_namespaced_pod("tensorflow", watch=False)
+    pods = k8.list_namespaced_pod(namespace, watch=False)
     for item in pods.items:
-        print("Try to match %s" % item.metadata.name)
         if re.match("tensorflow-worker-([0-9]+)", item.metadata.name):
             node_name = item.metadata.name
             node_port = item.spec.containers[0].ports[0].container_port
-            index = item.metadata.name.split("-")[2]
             worker_nodes.append("%s:%s" % (node_name, node_port))
-            print("Matched: %s on port %s" % (node_name, node_port))
     return worker_nodes
+
+
+def build_task_index():
+    if os.environ.get("POD_TASK") == "worker":
+        pod_name = os.environ.get("POD_NAME")
+        return pod_name.split("-")[2]
+    return '0'
+
+
+def build_chief_config(namespace="tensorflow"):
+    chief_nodes = []
+    services = k8.list_namespaced_service(namespace, watch=False)
+    for item in services.items:
+        if "chief" in item.metadata.name:
+            chief_nodes.append("%s:%s" % (item.metadata.name, item.spec.ports[0].port))
+    return chief_nodes

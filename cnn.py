@@ -9,8 +9,9 @@ import kubernetesResolver
 
 # resolve the k8 config
 kubernetesResolver.print_pods_services()
-workers = kubernetesResolver.build_config()
-print(workers)
+tf_config = kubernetesResolver.build_config()
+print(tf_config)
+os.environ['TF_CONFIG'] = str(tf_config)
 
 def create_model(input_shape=(32, 32, 3), starting_filter_size=32, filter_shape=(3, 3), activation_fn='relu',
                  pooling_shape=(2, 2), output_classes=10):
