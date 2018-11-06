@@ -39,7 +39,7 @@ def build_worker_config(namespace="tensorflow"):
     pods = k8.list_namespaced_pod(namespace, watch=False)
     for item in pods.items:
         if re.match("tensorflow-worker-([0-9]+)", item.metadata.name):
-            node_name = item.metadata.name
+            node_name = "%s.worker-svc.tensorflow.svc.cluster.local" % item.metadata.name
             node_port = item.spec.containers[0].ports[0].container_port
             worker_nodes.append("%s:%s" % (node_name, node_port))
     return worker_nodes

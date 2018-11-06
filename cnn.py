@@ -136,4 +136,5 @@ def model_main():
 #    "TF_CONFIG"] = '{"cluster": {"chief": ["localhost:2223"],"worker": ["localhost:2222"]},"task": {"type": "chief", "index": 0}}'
 
 # Call the model_main function defined above.
+tf.logging.set_verbosity(tf.logging.DEBUG)
 model_main()
