@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow import estimator as tf_estimator
 from tensorflow import keras as ks
 from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
-import kubernetesResolver
+import kubernetes_resolver
 
 
 def create_model(input_shape=(32, 32, 3), starting_filter_size=32, filter_shape=(3, 3), activation_fn='relu',
@@ -107,11 +107,11 @@ def load_data():
 
 def model_main():
     print("--------------------- Load Kubernetes Config ---------------------")
-    tf_config = kubernetesResolver.build_config()
+    tf_config = kubernetes_resolver.build_config()
     os.environ['TF_CONFIG'] = str(tf_config)
 
-    worker_index = kubernetesResolver.fetch_task_index()
-    num_workers = len(kubernetesResolver.build_worker_list())
+    worker_index = kubernetes_resolver.fetch_task_index()
+    num_workers = len(kubernetes_resolver.build_worker_list())
 
     print("--------------------- Load Data ---------------------")
     train_img, test_img, y_train, y_test = load_data()
