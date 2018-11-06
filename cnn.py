@@ -7,11 +7,6 @@ from tensorflow import keras as ks
 from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
 import kubernetesResolver
 
-# resolve the k8 config
-kubernetesResolver.print_pods_services()
-tf_config = kubernetesResolver.build_config()
-print(tf_config)
-os.environ['TF_CONFIG'] = str(tf_config)
 
 def create_model(input_shape=(32, 32, 3), starting_filter_size=32, filter_shape=(3, 3), activation_fn='relu',
                  pooling_shape=(2, 2), output_classes=10):
@@ -72,20 +67,23 @@ def input_fn(img=None,
              label=None,
              batch_size=32,
              num_epochs=None,
-             num_worker=3,
+             num_workers=3,
+             worker_index=None,
              shuffle=True):
     data_set = tf.data.Dataset.from_tensor_slices((img, label))
 
+    if worker_index:
+        data_set = data_set.shard(num_workers, worker_index)
+
     if shuffle:
-        data_set = data_set.shuffle(buffer_size=batch_size * num_worker)
+        data_set = data_set.shuffle(buffer_size=batch_size * num_workers)
 
     data_set = data_set.repeat(num_epochs)
     data_set = data_set.batch(batch_size=batch_size)
     return data_set
 
 
-def model_main():
-    print("--------------------- Load Data ---------------------")
+def load_data():
     (train_img, train_label), (test_img, test_label) = tf.keras.datasets.cifar10.load_data()
 
     # Reduce data to 10% to not exceed the given memory
@@ -104,6 +102,19 @@ def model_main():
     # Map RGB values from 0-255 to 0-1
     train_img /= 255
     test_img /= 255
+    return train_img, test_img, y_train, y_test
+
+
+def model_main():
+    print("--------------------- Load Kubernetes Config ---------------------")
+    tf_config = kubernetesResolver.build_config()
+    os.environ['TF_CONFIG'] = str(tf_config)
+
+    worker_index = kubernetesResolver.fetch_task_index()
+    num_workers = len(kubernetesResolver.build_worker_list())
+
+    print("--------------------- Load Data ---------------------")
+    train_img, test_img, y_train, y_test = load_data()
 
     print("--------------------- Set RunConfiguration ---------------------")
     distribution = CollectiveAllReduceStrategy(num_gpus_per_worker=1)
@@ -114,10 +125,14 @@ def model_main():
     keras_estimator = ks.estimator.model_to_estimator(
         keras_model=create_model(), config=run_config, model_dir='./model')
 
-    train_spec = tf_estimator.TrainSpec(input_fn=lambda: input_fn(img=train_img, label=y_train, shuffle=True),
-                                        max_steps=1000)
-    eval_spec = tf_estimator.EvalSpec(input_fn=lambda: input_fn(img=test_img, label=y_test, shuffle=False),
-                                      steps=100)
+    train_spec = tf_estimator.TrainSpec(
+        input_fn=lambda: input_fn(img=train_img, label=y_train, num_workers=num_workers, worker_index=worker_index,
+                                  shuffle=True),
+        max_steps=1000)
+    eval_spec = tf_estimator.EvalSpec(
+        input_fn=lambda: input_fn(img=test_img, label=y_test, num_workers=num_workers, worker_index=worker_index,
+                                  shuffle=False),
+        steps=100)
 
     # Create estimator
     print("--------------------- Start Training ---------------------")

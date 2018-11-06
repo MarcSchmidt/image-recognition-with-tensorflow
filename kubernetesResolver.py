@@ -27,14 +27,14 @@ def print_pods_services():
 
 
 def build_config():
-    task = {'type': os.environ.get("POD_TASK"), 'index': int(build_task_index())}
-    cluster = {'chief': build_chief_config(), 'worker': build_worker_config()}
+    task = {'type': os.environ.get("POD_TASK"), 'index': fetch_task_index()}
+    cluster = {'chief': build_chief_list(), 'worker': build_worker_list()}
     tf_config = {'cluster': cluster, 'task': task}
     print(tf_config)
     return json.dumps(tf_config)
 
 
-def build_worker_config(namespace="tensorflow"):
+def build_worker_list(namespace="tensorflow"):
     worker_nodes = []
     pods = k8.list_namespaced_pod(namespace, watch=False)
     for item in pods.items:
@@ -45,14 +45,14 @@ def build_worker_config(namespace="tensorflow"):
     return worker_nodes
 
 
-def build_task_index():
+def fetch_task_index():
     if os.environ.get("POD_TASK") == "worker":
         pod_name = os.environ.get("POD_NAME")
-        return pod_name.split("-")[2]
-    return '0'
+        return int(pod_name.split("-")[2])
+    return 0
 
 
-def build_chief_config(namespace="tensorflow"):
+def build_chief_list(namespace="tensorflow"):
     chief_nodes = []
     services = k8.list_namespaced_service(namespace, watch=False)
     for item in services.items:
