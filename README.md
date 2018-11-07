@@ -11,3 +11,7 @@ The performance of the Model can be viewed with Tensorboard.
 tensorboard --logdir=logs/
 ```
 
+# Convert images to tfrecords
+```bash
+python create_tfrecords/create_tfrecord.py --dataset_dir=dataset_dir --tfrecord_filename=tfrecord_filename
+```
