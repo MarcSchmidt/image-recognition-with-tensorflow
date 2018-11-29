@@ -143,7 +143,7 @@ def model_main():
     if "TF_CONFIG" in os.environ:
         config = os.environ['TF_CONFIG']
         if "\"type\": \"chief\"" in config:
-            os.system('tensorboard --logdir=/notebooks/app/model --port=8080')
+            os.system('tensorboard --logdir=/notebooks/app/model --port=6006')
 
 
 # Define the evironment variable, for local usage
