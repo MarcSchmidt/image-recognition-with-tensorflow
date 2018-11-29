@@ -5,6 +5,7 @@ import tensorflow as tf
 from tensorflow import estimator as tf_estimator
 from tensorflow import keras as ks
 from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
+import load_images
 import kubernetes_resolver
 
 
@@ -84,7 +85,8 @@ def input_fn(img=None,
 
 
 def load_data():
-    (train_img, train_label), (test_img, test_label) = tf.keras.datasets.cifar10.load_data()
+    # (train_img, train_label), (test_img, test_label) = tf.keras.datasets.cifar10.load_data()
+    (train_img, train_label), (test_img, test_label) = load_images.load()
 
     # Reduce data to 10% to not exceed the given memory
     train_img = np.array_split(train_img, 10)[0]
@@ -109,9 +111,11 @@ def model_main():
     print("--------------------- Load Kubernetes Config ---------------------")
     tf_config = kubernetes_resolver.build_config()
     os.environ['TF_CONFIG'] = str(tf_config)
-
     worker_index = kubernetes_resolver.fetch_task_index()
     num_workers = len(kubernetes_resolver.build_worker_list())
+
+    # worker_index = None
+    # num_workers = 3
 
     print("--------------------- Load Data ---------------------")
     train_img, test_img, y_train, y_test = load_data()
