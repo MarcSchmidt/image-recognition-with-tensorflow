@@ -5,6 +5,7 @@ services:
     image: tensorflow/serving
     ports:
       - 8501:8501
-    
+      - 8500:8500
+
     volumes:
       - "C:/Users/marc/Desktop/Uni/AVS/image-recognition-with-tensorflow/model/1544007491:/models/model/1"
