@@ -8,6 +8,8 @@ from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
 import load_images
 import kubernetes_resolver
 
+IMAGE_INPUT = None
+
 
 def create_model(input_shape=(32, 32, 3), starting_filter_size=32, filter_shape=(3, 3), activation_fn='relu',
                  pooling_shape=(2, 2), output_classes=10):
@@ -88,6 +90,9 @@ def load_data():
     # (train_img, train_label), (test_img, test_label) = tf.keras.datasets.cifar10.load_data()
     (train_img, train_label), (test_img, test_label) = load_images.load()
 
+    global IMAGE_INPUT
+    IMAGE_INPUT = train_img
+
     # Reduce data to 10% to not exceed the given memory
     train_img = np.array_split(train_img, 10)[0]
     train_label = np.array_split(train_label, 10)[0]
@@ -140,14 +145,24 @@ def model_main():
 
     # Create estimator
     print("--------------------- Start Training ---------------------")
-    estimator = tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
+    tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
     print("--------------------- Finish training ---------------------")
+    print("--------------------- Start Export ---------------------")
+    export_dir = keras_estimator.export_savedmodel(export_dir_base=".", serving_input_receiver_fn=serving_input_fn)
+    print("--------------------- Finish Export on Path ---------------------")
     print("--------------------- Start Tensorboard ---------------------")
     if "TF_CONFIG" in os.environ:
         config = os.environ['TF_CONFIG']
         if "\"type\": \"chief\"" in config:
             os.system('tensorboard --logdir=/notebooks/app/model --port=6006')
 
+
+def serving_input_fn():
+    features = {
+        'conv2d_input': tf.placeholder(tf.float32, [None, 32, 32, 3])
+    }
+    return tf.estimator.export.ServingInputReceiver(features,
+                                                    features)
 
 
 # Define the evironment variable, for local usage
