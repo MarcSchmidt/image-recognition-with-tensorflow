@@ -149,7 +149,8 @@ def model_main():
     print("--------------------- Finish training ---------------------")
 
     print("--------------------- Start Export ---------------------")
-    export_dir = keras_estimator.export_savedmodel(export_dir_base=".", serving_input_receiver_fn=serving_input_fn)
+    export_dir = keras_estimator.export_savedmodel(export_dir_base="./dist", serving_input_receiver_fn=serving_input_fn)
+
     print("--------------------- Finish Export on Path ---------------------")
 
     print("--------------------- Start Tensorboard ---------------------")
