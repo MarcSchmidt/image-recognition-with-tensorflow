@@ -7,6 +7,9 @@ from tensorflow import keras as ks
 from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
 import kubernetes_resolver
 
+INPUTS = None
+OUTPUTS = None
+
 
 def create_model(input_shape=(32, 32, 3), starting_filter_size=32, filter_shape=(3, 3), activation_fn='relu',
                  pooling_shape=(2, 2), output_classes=10):
@@ -58,6 +61,11 @@ def create_model(input_shape=(32, 32, 3), starting_filter_size=32, filter_shape=
     classifier.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
     classifier.summary()
+
+    global INPUTS
+    INPUTS = classifier.inputs
+    global OUTPUTS
+    OUTPUTS = classifier.outputs
 
     return classifier
 
@@ -136,14 +144,16 @@ def model_main():
 
     # Create estimator
     print("--------------------- Start Training ---------------------")
-    tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
-
+    estimator = tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
     print("--------------------- Finish training ---------------------")
 
-    if "TF_CONFIG" in os.environ:
-        config = os.environ['TF_CONFIG']
-        if "\"type\": \"chief\"" in config:
-            os.system('tensorboard --logdir=/notebooks/app/model --port=8080')
+    print("Inputs %s" % INPUTS)
+    print("Outputs %s" % OUTPUTS)
+
+    # if "TF_CONFIG" in os.environ:
+    #     config = os.environ['TF_CONFIG']
+    #     if "\"type\": \"chief\"" in config:
+    #         os.system('tensorboard --logdir=/notebooks/app/model --port=8080')
 
 
 # Define the evironment variable, for local usage
