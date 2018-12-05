@@ -147,9 +147,11 @@ def model_main():
     print("--------------------- Start Training ---------------------")
     tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
     print("--------------------- Finish training ---------------------")
+
     print("--------------------- Start Export ---------------------")
     export_dir = keras_estimator.export_savedmodel(export_dir_base=".", serving_input_receiver_fn=serving_input_fn)
     print("--------------------- Finish Export on Path ---------------------")
+
     print("--------------------- Start Tensorboard ---------------------")
     if "TF_CONFIG" in os.environ:
         config = os.environ['TF_CONFIG']
