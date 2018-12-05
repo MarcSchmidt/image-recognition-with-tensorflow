@@ -20,9 +20,9 @@ def load():
       dict[i] = label
       for img in dir.iterdir():
         x_train.append(img_to_array(load_img(img)))
-        y_train.append(np.array(i))
+        y_train.append(i)
 
-  x_train = np.array(x_train)
+  x_train = np.array(x_train) / 255.0
   y_train = np.array(y_train)
   y_train = y_train.reshape(y_train.shape + (1,))
 
@@ -33,9 +33,9 @@ def load():
     if dir.is_dir():
       for img in dir.iterdir():
         x_test.append(img_to_array(load_img(img)))
-        y_test.append(np.array(i))
+        y_test.append(i)
 
-  x_test = np.array(x_test)
+  x_test = np.array(x_test) / 255.0
   y_test = np.array(y_test)
   y_test = y_test.reshape(y_test.shape + (1,))
 
