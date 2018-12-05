@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  serving:
+    image: tensorflow/serving
+    ports:
+      - 8501:8501
+    
+    volumes:
+      - "C:/Users/marc/Desktop/Uni/AVS/image-recognition-with-tensorflow/model/1544007491:/models/model/1"
