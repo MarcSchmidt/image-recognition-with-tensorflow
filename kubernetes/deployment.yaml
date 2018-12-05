@@ -17,7 +17,7 @@ spec:
   ports:
     - port: 8080
       protocol: TCP
-      targetPort: 8080
+      targetPort: 6006
 ---
 # Chief Service
 apiVersion: v1
@@ -49,6 +49,9 @@ spec:
         labels:
           app: chief
     spec:
+      volumes:
+        - name: shared-model
+          emptyDir: {}
       containers:
         - name: chief
           image: tensorflow-img-rec
@@ -66,6 +69,17 @@ spec:
                   fieldPath: metadata.namespace
           ports:
             - containerPort: 2222
+          volumeMounts:
+            - mountPath: /notebooks/app/dist
+              name: shared-model
+        - name: serving
+          image: tensorflow/serving
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /models/model
+              name: shared-model
+          ports:
+            - containerPort: 8501
 ---
 # Worker Service
 apiVersion:  v1
@@ -117,3 +131,18 @@ spec:
                   fieldPath: metadata.namespace
           ports:
             - containerPort: 2222
+---
+# NodePort Service to export the tensorflow-model
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-svc
+  namespace: tensorflow
+spec:
+  selector:
+    app: chief
+  type: NodePort
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 8501
