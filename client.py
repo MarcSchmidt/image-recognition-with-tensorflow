@@ -20,6 +20,7 @@ def run(host, port, image, model, signature_name):
     # Read an image
     data = imread(image)
     data = data.astype(np.float32)
+    data = data / 255.0
     print(data)
 
     start = time.time()
