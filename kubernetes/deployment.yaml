@@ -132,17 +132,32 @@ spec:
           ports:
             - containerPort: 2222
 ---
-# NodePort Service to export the tensorflow-model
+# NodePort Service to export the tensorflow-model HTTP
 apiVersion: v1
 kind: Service
 metadata:
-  name: model-svc
+  name: model-http-svc
   namespace: tensorflow
 spec:
   selector:
     app: chief
   type: NodePort
   ports:
-    - port: 80
+    - port: 8501
       protocol: TCP
       targetPort: 8501
+---
+# NodePort Service to export the tensorflow-model GRPC
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-grpc-svc
+  namespace: tensorflow
+spec:
+  selector:
+    app: chief
+  type: NodePort
+  ports:
+    - port: 8500
+      protocol: TCP
+      targetPort: 8500
