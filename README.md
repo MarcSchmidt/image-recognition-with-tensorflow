@@ -1,5 +1,5 @@
 # image-recognition-with-tensorflow
-A project to train a convolutional neural network with keras on a MacOS Cluster with the help Docker & Kubernetes.
+A project to train a convolutional neural network with keras on a MacOS cluster using Docker and Kubernetes.
 
 # Train the Model
 To train the model just execute the python script.
@@ -10,4 +10,3 @@ The performance of the Model can be viewed with Tensorboard.
 ```bash
 tensorboard --logdir=logs/
 ```
-

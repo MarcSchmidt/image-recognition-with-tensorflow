@@ -5,10 +5,8 @@ import tensorflow as tf
 from tensorflow import estimator as tf_estimator
 from tensorflow import keras as ks
 from tensorflow.contrib.distribute import CollectiveAllReduceStrategy
+import load_images
 import kubernetes_resolver
-
-INPUTS = None
-OUTPUTS = None
 
 
 def create_model(input_shape=(32, 32, 3), starting_filter_size=32, filter_shape=(3, 3), activation_fn='relu',
@@ -62,11 +60,6 @@ def create_model(input_shape=(32, 32, 3), starting_filter_size=32, filter_shape=
 
     classifier.summary()
 
-    global INPUTS
-    INPUTS = classifier.inputs
-    global OUTPUTS
-    OUTPUTS = classifier.outputs
-
     return classifier
 
 
@@ -92,7 +85,8 @@ def input_fn(img=None,
 
 
 def load_data():
-    (train_img, train_label), (test_img, test_label) = tf.keras.datasets.cifar10.load_data()
+    # (train_img, train_label), (test_img, test_label) = tf.keras.datasets.cifar10.load_data()
+    (train_img, train_label), (test_img, test_label) = load_images.load()
 
     # Reduce data to 10% to not exceed the given memory
     train_img = np.array_split(train_img, 10)[0]
@@ -117,9 +111,11 @@ def model_main():
     print("--------------------- Load Kubernetes Config ---------------------")
     tf_config = kubernetes_resolver.build_config()
     os.environ['TF_CONFIG'] = str(tf_config)
-
     worker_index = kubernetes_resolver.fetch_task_index()
     num_workers = len(kubernetes_resolver.build_worker_list())
+
+    # worker_index = None
+    # num_workers = 3
 
     print("--------------------- Load Data ---------------------")
     train_img, test_img, y_train, y_test = load_data()
@@ -146,14 +142,12 @@ def model_main():
     print("--------------------- Start Training ---------------------")
     estimator = tf_estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
     print("--------------------- Finish training ---------------------")
+    print("--------------------- Start Tensorboard ---------------------")
+    if "TF_CONFIG" in os.environ:
+        config = os.environ['TF_CONFIG']
+        if "\"type\": \"chief\"" in config:
+            os.system('tensorboard --logdir=/notebooks/app/model --port=6006')
 
-    print("Inputs %s" % INPUTS)
-    print("Outputs %s" % OUTPUTS)
-
-    # if "TF_CONFIG" in os.environ:
-    #     config = os.environ['TF_CONFIG']
-    #     if "\"type\": \"chief\"" in config:
-    #         os.system('tensorboard --logdir=/notebooks/app/model --port=8080')
 
 
 # Define the evironment variable, for local usage
