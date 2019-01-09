@@ -1,12 +1,18 @@
 import os
+import pathlib as pl
 import numpy as np
-from pathlib import Path
-from tensorflow.keras.preprocessing.image import img_to_array, load_img
+import tensorflow as tf
+import tensorflow.keras.preprocessing as pp
+
+def unison_shuffled_copies(a, b):
+  assert len(a) == len(b)
+  p = np.random.permutation(len(a))
+  return a[p], b[p]
 
 def load():
 
-  train_dir = Path('dataset/training_set')
-  test_dir = Path('dataset/test_set')
+  train_dir = pl.Path('dataset/training_set')
+  test_dir = pl.Path('dataset/test_set')
 
   # for later use to map back label ids to label names
   dict = {}
@@ -14,12 +20,12 @@ def load():
   x_train = []
   y_train = []
 
-  for i, dir in enumerate(train_dir.iterdir()):
+  for i, dir in enumerate(sorted(train_dir.iterdir())):
     if dir.is_dir():
       label = os.path.basename(str(dir))
       dict[i] = label
       for img in dir.iterdir():
-        x_train.append(img_to_array(load_img(img)))
+        x_train.append(pp.image.img_to_array(pp.image.load_img(img)))
         y_train.append(i)
 
   x_train = np.array(x_train) / 255.0
@@ -29,14 +35,31 @@ def load():
   x_test = []
   y_test = []
 
-  for i, dir in enumerate(test_dir.iterdir()):
+  for i, dir in enumerate(sorted(test_dir.iterdir())):
     if dir.is_dir():
       for img in dir.iterdir():
-        x_test.append(img_to_array(load_img(img)))
+        x_test.append(tf.keras.preprocessing.image.img_to_array(tf.keras.preprocessing.image.load_img(img)))
         y_test.append(i)
 
   x_test = np.array(x_test) / 255.0
   y_test = np.array(y_test)
   y_test = y_test.reshape(y_test.shape + (1,))
+
+  x_train, y_train = unison_shuffled_copies(x_train, y_train)
+  x_test, y_test = unison_shuffled_copies(x_test, y_test)
+
+  # Reduce data to 10% to not exceed the given memory
+  x_train = np.array_split(x_train, 10)[0]
+  y_train = np.array_split(y_train, 10)[0]
+  x_test = np.array_split(x_test, 10)[0]
+  y_test = np.array_split(y_test, 10)[0]
+
+  # Convert class vectors to binary class matrices.
+  y_train = tf.keras.utils.to_categorical(y_train, 10)
+  y_test = tf.keras.utils.to_categorical(y_test, 10)
+
+  x_train = x_train.astype('float32')
+  x_test = x_test.astype('float32')
+
 
   return (x_train, y_train), (x_test, y_test)

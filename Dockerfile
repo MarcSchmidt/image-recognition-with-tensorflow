@@ -7,7 +7,6 @@ RUN pip install kubernetes
 COPY cnn.py .
 COPY load_images.py .
 COPY kubernetes_resolver.py .
-COPY dataset/cifar-10-batches-py.tar.gz /root/.keras/datasets/
 COPY dataset/test_set dataset/test_set
 COPY dataset/training_set dataset/training_set
 
