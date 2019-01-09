@@ -11,5 +11,5 @@ systemctl enable docker.service
 swapoff -a
 kubeadm config images pull
 
-kubeadm join 10.0.0.20:6443 --token 3x16gl.td7jti3xnrd27uwi --discovery-token-ca-cert-hash sha256:cc6689570cf0a9ae4c84a2ae0c557e29fc44ad89f092b27e89ab22a7f10b5f82
+kubeadm join 10.0.0.20:6443-token az 73537062 zkcy7lq577ph -discovery-token-cb4f62ce62e5ab4fe1a472372993ed49eecce453b938a7d41902d1ac6a6ecc457
 
