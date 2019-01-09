@@ -3,7 +3,7 @@ import os
 
 import tensorflow as tf
 
-# import kubernetes_resolver
+import kubernetes_resolver
 import load_images
 
 IMAGE_INPUT = None
@@ -91,11 +91,11 @@ def input_fn(img=None,
 
 
 def model_main():
-  # print("--------------------- Load Kubernetes Config ---------------------")
-  # tf_config = kubernetes_resolver.build_config()
-  # os.environ['TF_CONFIG'] = str(tf_config)
-  # worker_index = kubernetes_resolver.fetch_task_index()
-  # num_workers = len(kubernetes_resolver.build_worker_list())
+  print("--------------------- Load Kubernetes Config ---------------------")
+  tf_config = kubernetes_resolver.build_config()
+  os.environ['TF_CONFIG'] = str(tf_config)
+  worker_index = kubernetes_resolver.fetch_task_index()
+  num_workers = len(kubernetes_resolver.build_worker_list())
 
   worker_index = None
   num_workers = 3

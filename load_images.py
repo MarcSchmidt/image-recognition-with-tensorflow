@@ -41,7 +41,7 @@ def load():
     if dir.is_dir():
       for img in dir.iterdir():
         x_test.append(tf.keras.preprocessing.image.img_to_array(
-          tf.keras.preprocessing.image.load_img(img)))
+            tf.keras.preprocessing.image.load_img(img)))
         y_test.append(i)
 
   x_test = np.array(x_test) / 255.0
