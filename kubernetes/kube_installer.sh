@@ -11,5 +11,5 @@ systemctl enable docker.service
 swapoff -a
 kubeadm config images pull
 
-kubeadm join 10.0.0.20:6443-token az 73537062 zkcy7lq577ph -discovery-token-cb4f62ce62e5ab4fe1a472372993ed49eecce453b938a7d41902d1ac6a6ecc457
+kubeadm join 10.0.0.20:6443-token az7353.7o62zkcy7lq577ph -discovery-token-cb4f62ce62e5ab4fe1a472372993ed49eecce453b938a7d41902d1ac6a6ecc457
 
