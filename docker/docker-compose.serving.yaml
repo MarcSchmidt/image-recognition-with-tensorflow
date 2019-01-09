@@ -8,4 +8,4 @@ services:
       - 8500:8500
 
     volumes:
-      - "C:/Users/marc/Desktop/Uni/AVS/image-recognition-with-tensorflow/model/1544007491:/models/model/1"
+      - "/image-recognition-with-tensorflow/model/1544007491:/models/model/1"
