@@ -10,7 +10,7 @@ apt-mark hold kubelet kubeadm kubectl
 systemctl enable docker.service
 swapoff -a
 kubeadm config images pull
-kubeadm init --apiserver-advertise-address=10.0.0.20 --apiserver-cert-extra-sans=10.0.0.20,10.0.0.21
+kubeadm init --apiserver-advertise-address=10.0.0.20 --apiserver-cert-extra-sans=10.0.0.20
 mkdir -p $HOME/.kube
 cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 chown $(id -u):$(id -g) $HOME/.kube/config
