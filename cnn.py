@@ -93,12 +93,6 @@ def load_data():
     global IMAGE_INPUT
     IMAGE_INPUT = train_img
 
-    # Reduce data to 10% to not exceed the given memory
-    train_img = np.array_split(train_img, 10)[0]
-    train_label = np.array_split(train_label, 10)[0]
-    test_img = np.array_split(test_img, 10)[0]
-    test_label = np.array_split(test_label, 10)[0]
-
     # Convert class vectors to binary class matrices.
     y_train = ks.utils.to_categorical(train_label, 10)
     y_test = ks.utils.to_categorical(test_label, 10)
