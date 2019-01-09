@@ -1,16 +1,18 @@
 import os
 import pathlib as pl
+
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.preprocessing as pp
+
 
 def unison_shuffled_copies(a, b):
   assert len(a) == len(b)
   p = np.random.permutation(len(a))
   return a[p], b[p]
 
-def load():
 
+def load():
   train_dir = pl.Path('dataset/training_set')
   test_dir = pl.Path('dataset/test_set')
 
@@ -38,7 +40,8 @@ def load():
   for i, dir in enumerate(sorted(test_dir.iterdir())):
     if dir.is_dir():
       for img in dir.iterdir():
-        x_test.append(tf.keras.preprocessing.image.img_to_array(tf.keras.preprocessing.image.load_img(img)))
+        x_test.append(tf.keras.preprocessing.image.img_to_array(
+          tf.keras.preprocessing.image.load_img(img)))
         y_test.append(i)
 
   x_test = np.array(x_test) / 255.0
@@ -49,10 +52,10 @@ def load():
   x_test, y_test = unison_shuffled_copies(x_test, y_test)
 
   # Reduce data to 10% to not exceed the given memory
-  x_train = np.array_split(x_train, 10)[0]
-  y_train = np.array_split(y_train, 10)[0]
-  x_test = np.array_split(x_test, 10)[0]
-  y_test = np.array_split(y_test, 10)[0]
+  # x_train = np.array_split(x_train, 10)[0]
+  # y_train = np.array_split(y_train, 10)[0]
+  # x_test = np.array_split(x_test, 10)[0]
+  # y_test = np.array_split(y_test, 10)[0]
 
   # Convert class vectors to binary class matrices.
   y_train = tf.keras.utils.to_categorical(y_train, 10)
@@ -60,6 +63,5 @@ def load():
 
   x_train = x_train.astype('float32')
   x_test = x_test.astype('float32')
-
 
   return (x_train, y_train), (x_test, y_test)
