@@ -9,9 +9,9 @@ import load_images
 IMAGE_INPUT = None
 
 
-def create_model(input_shape=(32, 32, 3), starting_filter_size=32,
-    filter_shape=(3, 3), activation_fn='relu',
-    pooling_shape=(2, 2), output_classes=10):
+def create_model(input_shape=(32, 32, 3), start_filters=32,
+                 kernel_size=(3, 3), activation='relu',
+                 pool_size=(2, 2), output_classes=10):
   # ---------- Shape the CNN ----------
   # Initialising the CNN as sequential model
   model = tf.keras.models.Sequential()
@@ -23,27 +23,25 @@ def create_model(input_shape=(32, 32, 3), starting_filter_size=32,
   # (3, 3)        - shape of each Filter
   # (64, 64, 3)   - Shape of Input (Rows, Columns, Channels)
   # 'relu'        - Activation function
-  model.add(
-      tf.keras.layers.Conv2D(starting_filter_size, filter_shape,
-                             input_shape=input_shape, activation=activation_fn,
-                             data_format='channels_last'))
-  model.add(tf.keras.layers.Conv2D(starting_filter_size, filter_shape,
-                                   activation=activation_fn))
+  model.add(tf.keras.layers.Conv2D(start_filters, kernel_size, padding='same',
+                                   activation=activation, input_shape=input_shape))
+  model.add(tf.keras.layers.Conv2D(start_filters, kernel_size, padding='same',
+                                   activation=activation))
 
   # Pooling Layer
   # Reduce the size of the input data by 75%
   # (2, 2) - Map 2x2 inputs to one output
-  model.add(tf.keras.layers.MaxPooling2D(pool_size=pooling_shape))
+  model.add(tf.keras.layers.MaxPooling2D(pool_size=pool_size))
   # Dropout Layer
   # Remove randomly some nodes to add noise
   model.add(tf.keras.layers.Dropout(0.25))
 
   # Convolution Layer
-  model.add(tf.keras.layers.Conv2D(starting_filter_size * 2, filter_shape,
-                                   activation=activation_fn))
-  model.add(tf.keras.layers.Conv2D(starting_filter_size * 2, filter_shape,
-                                   activation=activation_fn))
-  model.add(tf.keras.layers.MaxPooling2D(pool_size=pooling_shape))
+  model.add(tf.keras.layers.Conv2D(start_filters * 2, kernel_size, padding='same',
+                                   activation=activation))
+  model.add(tf.keras.layers.Conv2D(start_filters * 2, kernel_size, padding='same',
+                                   activation=activation))
+  model.add(tf.keras.layers.MaxPooling2D(pool_size=pool_size))
   model.add(tf.keras.layers.Dropout(0.25))
 
   # Flattening Layer
@@ -52,12 +50,12 @@ def create_model(input_shape=(32, 32, 3), starting_filter_size=32,
 
   # Full connection Layer
   # units  - Amound of nodes in the hidden layer
-  model.add(tf.keras.layers.Dense(units=512, activation=activation_fn))
+  model.add(tf.keras.layers.Dense(units=512, activation=activation))
   model.add(tf.keras.layers.Dropout(0.5))
 
   # Output Layer
   # units  - Amount of output classes
-  model.add(tf.keras.layers.Dense(units=output_classes, activation='sigmoid'))
+  model.add(tf.keras.layers.Dense(units=output_classes, activation='softmax'))
 
   # Compiling the CNN
   optimizer = tf.train.AdamOptimizer()
