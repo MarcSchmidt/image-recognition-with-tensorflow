@@ -128,7 +128,7 @@ spec:
   selector:
     matchLabels:
       app: worker
-  replicas: 2
+  replicas: 5
   serviceName: "worker-svc"
   podManagementPolicy: "Parallel"
   template:
