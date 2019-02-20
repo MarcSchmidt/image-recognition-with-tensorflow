@@ -76,7 +76,7 @@ spec:
           emptyDir: {}
       containers:
         - name: chief
-          image: tensorflow-img-rec
+          image: docker.nexus.archi-lab.io/archilab/tensorflow-img-rec
           imagePullPolicy: Never
           env:
             - name: POD_TASK
@@ -138,8 +138,8 @@ spec:
     spec:
       containers:
         - name: worker
-          image: tensorflow-img-rec
-          imagePullPolicy: Never
+          image: docker.nexus.archi-lab.io/archilab/tensorflow-img-rec
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_TASK
               value: 'worker'
