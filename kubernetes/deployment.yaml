@@ -56,7 +56,6 @@ spec:
         - name: chief
           image: tensorflow-img-rec
           imagePullPolicy: Never
-          command: ["ls /"]
           env:
             - name: POD_TASK
               value:  'chief'
@@ -119,7 +118,6 @@ spec:
         - name: worker
           image: tensorflow-img-rec
           imagePullPolicy: Never
-          command: ["ls /"]
           env:
             - name: POD_TASK
               value: 'worker'
