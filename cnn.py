@@ -95,8 +95,8 @@ def model_main():
   worker_index = kubernetes_resolver.fetch_task_index()
   num_workers = len(kubernetes_resolver.build_worker_list())
 
-  worker_index = None
-  num_workers = 3
+  #worker_index = None
+  #num_workers = 3
 
   print("--------------------- Load Data ---------------------")
   (x_train, y_train), (x_test, y_test) = load_images.load()
