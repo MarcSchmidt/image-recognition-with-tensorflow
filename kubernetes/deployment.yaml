@@ -19,7 +19,7 @@ metadata:
   name: pods-list
 subjects:
 - kind: ServiceAccount
-  name: tensorflow
+  name: default
   namespace: tensorflow
 roleRef:
   kind: ClusterRole
