@@ -55,7 +55,7 @@ spec:
       containers:
         - name: chief
           image: tensorflow-img-rec
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           env:
             - name: POD_TASK
               value:  'chief'
@@ -117,7 +117,7 @@ spec:
       containers:
         - name: worker
           image: tensorflow-img-rec
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           env:
             - name: POD_TASK
               value: 'worker'
