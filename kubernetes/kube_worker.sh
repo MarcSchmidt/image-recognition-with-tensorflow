@@ -1,3 +1,4 @@
-!bin/bash
+# !bin/bash
 
-kubeadm join 10.0.0.20:6443 --token z6kslm.o5kbg4gc39cnhxla --discovery-token-ca-cert-hash sha256:688a44bc72d8d73ba8e7a6a79be479df90d1f735ee6017b09b0ed3a780920d76
+kubeadm join 10.0.0.20:6443 --token cl03b1.g899fr342qdusxq6 --discovery-token-ca-cert-hash sha256:42b77c0267687b04b244ae10facdde7a3ce019eecc4b43749eb50e72c3d70e10
+
