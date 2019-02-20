@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   serving:
@@ -8,4 +8,4 @@ services:
       - 8500:8500
 
     volumes:
-      - "/image-recognition-with-tensorflow/model/1544007491:/models/model/1"
+      - "~/Projects/avs/image-recognition-with-tensorflow/model/1544628777:/models/model/1"
