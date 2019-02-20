@@ -4,6 +4,28 @@ kind: Namespace
 metadata:
   name: tensorflow
 ---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pods-list
+rules:
+- apiGroups: [""]
+  resources: ["services", "endpoints", "pods"]
+  verbs: ["get", "list", "watch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pods-list
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: tensorflow
+roleRef:
+  kind: ClusterRole
+  name: pods-list
+  apiGroup: rbac.authorization.k8s.io
+---
 # NodePort Service to export the tensorboard from chiefnode
 apiVersion: v1
 kind: Service
@@ -54,7 +76,7 @@ spec:
           emptyDir: {}
       containers:
         - name: chief
-          image: tensorflow-img-rec
+          image: docker.nexus.archi-lab.io/archilab/tensorflow-img-rec
           imagePullPolicy: Never
           env:
             - name: POD_TASK
@@ -116,8 +138,8 @@ spec:
     spec:
       containers:
         - name: worker
-          image: tensorflow-img-rec
-          imagePullPolicy: Never
+          image: docker.nexus.archi-lab.io/archilab/tensorflow-img-rec
+          imagePullPolicy: IfNotPresent
           env:
             - name: POD_TASK
               value: 'worker'

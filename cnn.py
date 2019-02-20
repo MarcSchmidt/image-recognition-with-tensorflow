@@ -172,5 +172,6 @@ def serving_input_fn():
 #                           + '"task": {"type": "chief", "index": 0}}'
 
 # Call the model_main function defined above.
+print("Run Tensorflow")
 tf.logging.set_verbosity(tf.logging.DEBUG)
 model_main()
