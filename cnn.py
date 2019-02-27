@@ -1,3 +1,4 @@
+import logging
 import math
 import os
 import time
@@ -106,7 +107,9 @@ def input_fn(
 def model_main():
     start = time.time()
     tf.logging.set_verbosity(tf.logging.DEBUG)
-    print("--------------------- Load Kubernetes Config ---------------------")
+    _logger = logging.getLogger("tensorflow")
+
+    _logger.info("--------------------- Load Kubernetes Config ---------------------")
     tf_config = kubernetes_resolver.build_config()
     os.environ['TF_CONFIG'] = str(tf_config)
     worker_index = kubernetes_resolver.fetch_task_index()
@@ -117,10 +120,10 @@ def model_main():
     # worker_index = None
     # num_workers = 3
 
-    print("--------------------- Load Data ---------------------")
+    _logger.info("--------------------- Load Data ---------------------")
     (x_train, y_train), (x_test, y_test) = load_images.load()
 
-    print("--------------------- Set RunConfiguration ---------------------")
+    _logger.info("--------------------- Set RunConfiguration ---------------------")
     distribution = tf.contrib.distribute.CollectiveAllReduceStrategy(
         num_gpus_per_worker=1)
     config = tf.estimator.RunConfig(train_distribute=distribution,
@@ -131,7 +134,7 @@ def model_main():
     # config = None
 
     # Create estimator
-    print("--------------------- Create Estimator ---------------------")
+    _logger.info("--------------------- Create Estimator ---------------------")
     keras_estimator = tf.keras.estimator.model_to_estimator(
         keras_model=create_model(), config=config, model_dir='./model')
 
@@ -147,23 +150,25 @@ def model_main():
                                   shuffle=False), steps=100)
 
     # Create estimator
-    print("--------------------- Start Training ---------------------")
+    tf.LogMessage()
+    _logger.info("--------------------- Start Training ---------------------")
     tf.estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
-    print("--------------------- Finish training ---------------------")
+    _logger.info("--------------------- Finish training ---------------------")
     end = time.time()
     time_diff = end - start
-    print('Tensorflow Time start: {}'.format(start))
-    print('Tensorflow Time end: {}'.format(end))
-    print('Tensorflow Time elapased: {}'.format(time_diff))
-    print("--------------------- Start Export ---------------------")
+    _logger.info('--------------------- Estimate time ---------------------')
+    _logger.info('Tensorflow Time start: {}'.format(start))
+    _logger.info('Tensorflow Time end: {}'.format(end))
+    _logger.info('Tensorflow Time elapased: {}'.format(time_diff))
+    _logger.info("--------------------- Start Export ---------------------")
     export_dir = keras_estimator.export_savedmodel(
         export_dir_base="./dist",
         serving_input_receiver_fn=serving_input_fn)
 
-    print("--------------------- Finish Export on Path %s ---------------------"
-          % export_dir)
+    _logger.info("--------------------- Finish Export on Path %s ---------------------"
+                 % export_dir)
 
-    print("--------------------- Start Tensorboard ---------------------")
+    _logger.info("--------------------- Start Tensorboard ---------------------")
     if "TF_CONFIG" in os.environ:
         config = os.environ['TF_CONFIG']
         if "\"type\": \"chief\"" in config:
