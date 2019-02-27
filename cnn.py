@@ -1,3 +1,4 @@
+import math
 import os
 
 import tensorflow as tf
@@ -81,7 +82,7 @@ def create_model(
 def input_fn(
         img=None,
         label=None,
-        batch_size=32,
+        batch_size=256,
         num_epochs=None,
         num_workers=3,
         worker_index=None,
@@ -92,10 +93,12 @@ def input_fn(
         data_set = data_set.shard(num_workers, worker_index)
 
     if shuffle:
-        data_set = data_set.shuffle(buffer_size=batch_size * num_workers)
+        data_set = data_set.shuffle(buffer_size=batch_size)
 
     data_set = data_set.repeat(num_epochs)
-    data_set = data_set.batch(batch_size=batch_size)
+    # Decrease Batch size as each worker will do one batch per step
+    # num_workers * batch_size = classified Images per Step
+    data_set = data_set.batch(batch_size=math.floor(batch_size / num_workers))
     return data_set
 
 
@@ -116,7 +119,7 @@ def model_main():
 
     print("--------------------- Set RunConfiguration ---------------------")
     distribution = tf.contrib.distribute.CollectiveAllReduceStrategy(
-            num_gpus_per_worker=1)
+        num_gpus_per_worker=1)
     config = tf.estimator.RunConfig(train_distribute=distribution,
                                     eval_distribute=distribution)
 
@@ -127,18 +130,18 @@ def model_main():
     # Create estimator
     print("--------------------- Create Estimator ---------------------")
     keras_estimator = tf.keras.estimator.model_to_estimator(
-            keras_model=create_model(), config=config, model_dir='./model')
+        keras_model=create_model(), config=config, model_dir='./model')
 
     train_spec = tf.estimator.TrainSpec(
-            input_fn=lambda: input_fn(img=x_train, label=y_train,
-                                      num_workers=num_workers,
-                                      worker_index=worker_index,
-                                      shuffle=True), max_steps=1000)
+        input_fn=lambda: input_fn(img=x_train, label=y_train,
+                                  num_workers=num_workers,
+                                  worker_index=worker_index,
+                                  shuffle=True), max_steps=1000)
     eval_spec = tf.estimator.EvalSpec(
-            input_fn=lambda: input_fn(img=x_test, label=y_test,
-                                      num_workers=num_workers,
-                                      worker_index=worker_index,
-                                      shuffle=False), steps=100)
+        input_fn=lambda: input_fn(img=x_test, label=y_test,
+                                  num_workers=num_workers,
+                                  worker_index=worker_index,
+                                  shuffle=False), steps=100)
 
     # Create estimator
     print("--------------------- Start Training ---------------------")
@@ -147,8 +150,8 @@ def model_main():
 
     print("--------------------- Start Export ---------------------")
     export_dir = keras_estimator.export_savedmodel(
-            export_dir_base="./dist",
-            serving_input_receiver_fn=serving_input_fn)
+        export_dir_base="./dist",
+        serving_input_receiver_fn=serving_input_fn)
 
     print("--------------------- Finish Export on Path %s ---------------------"
           % export_dir)
