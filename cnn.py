@@ -100,7 +100,7 @@ def input_fn(
     data_set = data_set.repeat(num_epochs)
     # Decrease Batch size as each worker will do one batch per step
     # num_workers * batch_size = classified Images per Step
-    data_set = data_set.batch(batch_size=math.floor(batch_size / num_workers))
+    # data_set = data_set.batch(batch_size=batch_size)
     return data_set
 
 
@@ -142,7 +142,7 @@ def model_main():
         input_fn=lambda: input_fn(img=x_train, label=y_train,
                                   num_workers=num_workers,
                                   worker_index=worker_index,
-                                  shuffle=True), max_steps=1000)
+                                  shuffle=True), max_steps=math.floor(1000 / num_workers))
     eval_spec = tf.estimator.EvalSpec(
         input_fn=lambda: input_fn(img=x_test, label=y_test,
                                   num_workers=num_workers,
