@@ -124,8 +124,7 @@ def model_main():
     (x_train, y_train), (x_test, y_test) = load_images.load()
 
     _logger.info("--------------------- Set RunConfiguration ---------------------")
-    distribution = tf.contrib.distribute.CollectiveAllReduceStrategy(
-        num_gpus_per_worker=1)
+    distribution = tf.contrib.distribute.CollectiveAllReduceStrategy(num_gpus_per_worker=0)
     config = tf.estimator.RunConfig(train_distribute=distribution,
                                     eval_distribute=distribution)
 
