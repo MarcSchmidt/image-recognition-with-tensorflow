@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>To-do List Sample</title>
+  <link rel="stylesheet" href="https://bootswatch.com/4/slate/bootstrap.min.css">
+</head>
+<body>
+{% load static %}
+
+<div class="container">
+  <form class="form-group" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input class="btn btn-default btn-file" type="file" name="myfile">
+    <button type="submit" class="btn btn-success">Upload</button>
+  </form>
+
+  <div class="row">
+    {% if uploaded_file_url%}
+    <div class="col-sm-6">
+      <p>Test Image has been uploaded</p>
+      <img width="500" height="500" src={{ uploaded_file_url }}>
+
+      <form action="#" method="get">
+        <input type="submit" class="btn btn-success" value="Predict result for image"
+               name="predictImage">
+      </form>
+    </div>
+    {% endif %}
+
+    {% if data %}
+    <div class="col-sm-6">
+      {% for entry in data %}
+      <p>{{ entry.1 }} % {{ entry.0 }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"
+        integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
+        crossorigin="anonymous"></script>
+</body>
+</html>
+
+
