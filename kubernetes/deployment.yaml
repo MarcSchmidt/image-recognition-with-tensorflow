@@ -102,6 +102,7 @@ spec:
               name: shared-model
           ports:
             - containerPort: 8501
+            - containerPort: 8500
 ---
 # Worker Service
 apiVersion:  v1
@@ -128,7 +129,7 @@ spec:
   selector:
     matchLabels:
       app: worker
-  replicas: 5
+  replicas: 1
   serviceName: "worker-svc"
   podManagementPolicy: "Parallel"
   template:
@@ -168,6 +169,9 @@ spec:
     - port: 8501
       protocol: TCP
       targetPort: 8501
+    - port: 8500
+    - protocol: TCP
+      targetPort: 8500
 ---
 # NodePort Service to export the tensorflow-model GRPC
 apiVersion: v1
