@@ -116,7 +116,7 @@ def model_main():
 
     print("--------------------- Set RunConfiguration ---------------------")
     distribution = tf.contrib.distribute.CollectiveAllReduceStrategy(
-            num_gpus_per_worker=1)
+            num_gpus_per_worker=0)
     config = tf.estimator.RunConfig(train_distribute=distribution,
                                     eval_distribute=distribution)
 
