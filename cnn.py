@@ -1,5 +1,6 @@
 import math
 import os
+import time
 
 import tensorflow as tf
 
@@ -176,5 +177,11 @@ def serving_input_fn():
 
 # Call the model_main function defined above.
 print("Run Tensorflow")
+start = time.time()
 tf.logging.set_verbosity(tf.logging.DEBUG)
 model_main()
+end = time.time()
+time_diff = end - start
+print('Tensorflow Time start: {}'.format(start))
+print('Tensorflow Time end: {}'.format(end))
+print('Tensorflow Time elapased: {}'.format(time_diff))
