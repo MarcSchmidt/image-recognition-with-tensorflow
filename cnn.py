@@ -104,6 +104,8 @@ def input_fn(
 
 
 def model_main():
+    start = time.time()
+    tf.logging.set_verbosity(tf.logging.DEBUG)
     print("--------------------- Load Kubernetes Config ---------------------")
     tf_config = kubernetes_resolver.build_config()
     os.environ['TF_CONFIG'] = str(tf_config)
@@ -148,7 +150,11 @@ def model_main():
     print("--------------------- Start Training ---------------------")
     tf.estimator.train_and_evaluate(keras_estimator, train_spec, eval_spec)
     print("--------------------- Finish training ---------------------")
-
+    end = time.time()
+    time_diff = end - start
+    print('Tensorflow Time start: {}'.format(start))
+    print('Tensorflow Time end: {}'.format(end))
+    print('Tensorflow Time elapased: {}'.format(time_diff))
     print("--------------------- Start Export ---------------------")
     export_dir = keras_estimator.export_savedmodel(
         export_dir_base="./dist",
@@ -177,11 +183,4 @@ def serving_input_fn():
 
 # Call the model_main function defined above.
 print("Run Tensorflow")
-start = time.time()
-tf.logging.set_verbosity(tf.logging.DEBUG)
 model_main()
-end = time.time()
-time_diff = end - start
-print('Tensorflow Time start: {}'.format(start))
-print('Tensorflow Time end: {}'.format(end))
-print('Tensorflow Time elapased: {}'.format(time_diff))
